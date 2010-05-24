@@ -5,7 +5,7 @@ use strict;
 use lib "../";
 use DicomPack::IO::DicomWriter;
 
-my $writer = DicomWriter->new();
+my $writer = DicomPack::IO::DicomWriter->new();
 
 $writer->setValue("TransferSyntaxUID", "1.2.840.10008.1.2.1", "UI");
 

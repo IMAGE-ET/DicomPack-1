@@ -6,12 +6,18 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 ##############################################################################
 
-package DicomTagDict;
+package DicomPack::DB::DicomTagDict;
 
 use strict;
 use warnings;
 
-our $VERSION = '0.90';
+use vars qw(@ISA @EXPORT_OK);
+
+use Exporter;
+@ISA = qw/Exporter/;
+@EXPORT_OK = qw/getTag getTagID getTagDesc/;
+
+our $VERSION = '0.92';
 
 my $DicomTagList = {
    "0002,0000" => {

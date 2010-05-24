@@ -7,11 +7,18 @@
 # terms as Perl itself.
 ##############################################################################
 
-package CommonUtil;
+package DicomPack::IO::CommonUtil;
 
 use strict;
 use warnings;
-use DicomPack::DB::DicomTagDict;
+
+use DicomPack::DB::DicomTagDict qw/getTagDesc getTagID/;
+use DicomPack::DB::DicomVRDict qw/getVR/;
+
+use vars qw(@ISA @EXPORT_OK);
+use Exporter;
+@ISA = qw/Exporter/;
+@EXPORT_OK = qw/_getEndian _pack _unpack _isLittleEndian _toString _getDicomValue _showDicomField _parseDicomFieldPath/;
 
 # get the endianness of current system. ">" for big endiannes, "<" for little endianness.
 sub _getEndian
@@ -96,7 +103,7 @@ sub _isLittleEndian
         {
                 if(defined $dicomFields->{"0002,0010"})
                 {
-                        my ($tt_t, $vv_t) = CommonUtil::_getDicomValue($dicomFields->{"0002,0010"});
+                        my ($tt_t, $vv_t) = _getDicomValue($dicomFields->{"0002,0010"});
                         my $transferSyntax = $vv_t->[0];
                         if($transferSyntax eq "1.2.840.10008.1.2.2")
                         {
@@ -169,7 +176,7 @@ sub _getDicomValue
 
 	my @t_data;
 
-        my $vrItem = DicomVRDict::getVR($vr);
+        my $vrItem = getVR($vr);
         if(defined $vrItem->{tailing})
         {
              $value =~ s/($vrItem->{tailing})+$//; 
@@ -219,7 +226,7 @@ sub _showDicomField
 	{
 		foreach my $field_t (sort keys %$dicomFields)
 		{
-			my $desc = DicomTagDict::getTagDesc($field_t);
+			my $desc = getTagDesc($field_t);
 			print $indent."$field_t"." [".$desc."]"."->\n";
 			_showDicomField($dicomFields->{$field_t}, $depth+1, $verbose, $isLittleEndian, $field_t);
 		}
@@ -263,7 +270,7 @@ sub _parseDicomFieldPath
         {
                 my $tagID = $fieldID[$i];
 
-                $tagID = DicomTagDict::getTagID($tagID) if ($tagID !~ /^\d+$/ and $tagID ne "x");
+                $tagID = getTagID($tagID) if ($tagID !~ /^\d+$/ and $tagID ne "x");
 
                 die "Tag: $fieldID[$i], not exists!!!" unless defined $tagID;
 

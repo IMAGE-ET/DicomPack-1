@@ -6,14 +6,14 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 ##############################################################################
 
-package DicomDumper;
+package DicomPack::Util::DicomDumper;
 
 use strict;
 use warnings;
 
 use DicomPack::IO::DicomReader;
 
-our $VERSION = '0.90';
+our $VERSION = '0.92';
 
 sub new
 {
@@ -33,7 +33,7 @@ sub dump
 	$verbose = 0 unless defined $verbose;
 	$verbose = 0 unless $verbose =~ /^[0-2]$/;
 
-	my $reader = DicomReader->new($infile);
+	my $reader = DicomPack::IO::DicomReader->new($infile);
 
 	$reader->showDicomField($verbose);
 }
@@ -49,7 +49,7 @@ DicomDumper - dump the content of a dicom file to stdout
 =head1 SYNOPSIS
 
     use DicomPack::Util::DicomDumper;
-    my $dumper  = DicomDumper->new();
+    my $dumper  = DicomPack::Util::DicomDumper->new();
     my $inDicomFile = "your dicom file";
     $dumper->dump($inDicomFile, $verbose);
 

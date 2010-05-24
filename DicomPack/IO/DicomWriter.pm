@@ -6,14 +6,15 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 ##############################################################################
 
-package DicomWriter;
+package DicomPack::IO::DicomWriter;
 
 use strict;
 use warnings;
-use DicomPack::DB::DicomVRDict;
-use DicomPack::IO::CommonUtil;
+use DicomPack::DB::DicomTagDict qw/getTag/;
+use DicomPack::DB::DicomVRDict qw/getVR/;
+use DicomPack::IO::CommonUtil qw/_isLittleEndian _parseDicomFieldPath _pack _showDicomField _getDicomValue/;
 
-our $VERSION = '0.90';
+our $VERSION = '0.92';
 
 # instantiate DicomWriter
 sub new
@@ -29,7 +30,7 @@ sub new
 	my $self;
 
 	$self->{DicomField} = $dicomFields;
-	$self->{IsLittleEndian} = CommonUtil::_isLittleEndian($self->{DicomField});
+	$self->{IsLittleEndian} = _isLittleEndian($self->{DicomField});
 	$self->{IsImplicitVR} = _isImplicitVR($self->{DicomField});
 
 	bless $self, $classname;
@@ -135,7 +136,7 @@ sub _setDicomValue
 	my $isLittleEndian = shift;
 
 	my $value = "";
-	my $vrItem = DicomVRDict::getVR($vr); # if VR is not valid or not "XX", die
+	my $vrItem = getVR($vr); # if VR is not valid or not "XX", die
 	if(defined $vrItem->{type})
 	{
 		my $endianness = "<";
@@ -146,7 +147,7 @@ sub _setDicomValue
 			$endianness = "";
 		}
 		#$value = pack($vrItem->{type}.$endianness."*", @$valueList);
-		$value = CommonUtil::_pack($vrItem->{type}, $endianness, $valueList);
+		$value = _pack($vrItem->{type}, $endianness, $valueList);
 
 		if(length($value) % 2 != 0)
 		{
@@ -211,7 +212,7 @@ sub setValue
 	my $isLittleEndian = $self->{IsLittleEndian};
 	my $isImplicitVR = $self->{IsImplicitVR};
 
-	my @fieldID = CommonUtil::_parseDicomFieldPath($fieldPath);
+	my @fieldID = _parseDicomFieldPath($fieldPath);
 
 	if($fieldID[0] eq "0002,0010") # change implicit VR or endianness
 	{
@@ -223,7 +224,7 @@ sub setValue
 	{
 		if($vr eq "XX")
 		{
-			$vr = [keys %{DicomTagDict::getTag($fieldID[-1])->{vr}}]->[0];
+			$vr = [keys %{getTag($fieldID[-1])->{vr}}]->[0];
 			print "VR is not specified explicitly for ".$fieldPath.". $vr is used.\n";
 		}
 	}
@@ -532,7 +533,7 @@ sub _processDicomField
 	
 			if($len % 2 != 0)
 			{
-				my $vrItem = DicomVRDict::getVR($vr);
+				my $vrItem = getVR($vr);
 				if(defined $vrItem->{tailing})
 				{
 					$value = $value.$vrItem->{tailing};
@@ -554,7 +555,7 @@ sub _processDicomField
 
 			if($len % 2 != 0)
 			{
-				my $vrItem = DicomVRDict::getVR($vr);
+				my $vrItem = getVR($vr);
 				if(defined $vrItem->{tailing})
 				{
 					$value = $value.$vrItem->{tailing};
@@ -584,7 +585,7 @@ sub showDicomField
 	{
 		$dicomFields = $self->{DicomField};
 	}
-	CommonUtil::_showDicomField($dicomFields, 0, $verbose, $self->{IsLittleEndian});
+	_showDicomField($dicomFields, 0, $verbose, $self->{IsLittleEndian});
 }
 
 # check if implicit VR is used according to "0002,0010" of meta info
@@ -596,7 +597,7 @@ sub _isImplicitVR
 	{
 		if(defined $dicomFields->{"0002,0010"})
 		{
-			my ($tt_t, $vv_t) = CommonUtil::_getDicomValue($dicomFields->{"0002,0010"});
+			my ($tt_t, $vv_t) = _getDicomValue($dicomFields->{"0002,0010"});
 			my $transferSyntax = $vv_t->[0];
 			if($transferSyntax eq "1.2.840.10008.1.2")
 			{
@@ -664,7 +665,7 @@ sub _changeEndianness
 			{
 				if(substr($field_t, 0, 5) ne "0002,")
 				{
-					my ($vr, $value) = CommonUtil::_getDicomValue($dicomFields->{$field_t}, $oldEndian);
+					my ($vr, $value) = _getDicomValue($dicomFields->{$field_t}, $oldEndian);
 					$dicomFields->{$field_t} = _setDicomValue($vr, $value, $newEndian);
 				}
 			}
@@ -680,7 +681,7 @@ sub _changeEndianness
 			}
 			else
 			{
-				my ($vr, $value) = CommonUtil::_getDicomValue($dicomFields->[$index], $oldEndian);
+				my ($vr, $value) = _getDicomValue($dicomFields->[$index], $oldEndian);
 				$dicomFields->[$index] = _setDicomValue($vr, $value, $newEndian);
 			}
 		}
@@ -742,7 +743,7 @@ DicomWriter - A module to create a dicom file from dicom fields
 
     my $dicomFields = ...;  # dicomFields is the output of DicomReader->getDicomField().
 
-    my $writer = DicomWeader->new($dicomFields); # dicomFields can be undefined.
+    my $writer = DicomPack::IO::DicomWeader->new($dicomFields); # dicomFields can be undefined.
 
     # set PatientName to a new value
     $writer->setValue("PatientName", "DicomTest");

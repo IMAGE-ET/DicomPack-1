@@ -6,16 +6,15 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 ##############################################################################
 
-package DicomReader;
+package DicomPack::IO::DicomReader;
 
 use strict;
 use warnings;
 
-use DicomPack::DB::DicomTagDict;
-use DicomPack::DB::DicomVRDict;
-use DicomPack::IO::CommonUtil;
+use DicomPack::DB::DicomVRDict qw/getVR/;
+use DicomPack::IO::CommonUtil qw/_getDicomValue _isLittleEndian _showDicomField _parseDicomFieldPath/;
 
-our $VERSION = '0.90';
+our $VERSION = '0.92';
 
 #instantiate DicomReader
 sub new
@@ -91,7 +90,7 @@ sub isLittleEndian
 	my $self = shift;
 	my $dicomFields = $self->{DicomField};
 
-	return CommonUtil::_isLittleEndian($dicomFields);
+	return _isLittleEndian($dicomFields);
 }
 
 # check implicit/explicit VR of a dicom file according to "0002,0010" of meta info
@@ -104,7 +103,7 @@ sub isImplicitVR
 	{
 		if(defined $dicomFields->{"0002,0010"})
 		{
-			my ($tt_t, $vv_t) = CommonUtil::_getDicomValue($dicomFields->{"0002,0010"});
+			my ($tt_t, $vv_t) = _getDicomValue($dicomFields->{"0002,0010"});
 			my $transferSyntax = $vv_t->[0];
 			if($transferSyntax eq "1.2.840.10008.1.2")
 			{
@@ -329,7 +328,7 @@ sub _processDicomStr
 
 			if($tagID eq "0002,0010") # dicom endianness
 			{
-				my ($tt_t, $vv_t) = CommonUtil::_getDicomValue($dicomFields->{"0002,0010"});
+				my ($tt_t, $vv_t) = _getDicomValue($dicomFields->{"0002,0010"});
 				my $transferSyntax = $vv_t->[0];
 				if($transferSyntax eq "1.2.840.10008.1.2.2")
 				{
@@ -363,7 +362,7 @@ sub getValue
 	my $fieldPath = shift;
 	my $mode = shift;
 
-	my @fieldID = CommonUtil::_parseDicomFieldPath($fieldPath);
+	my @fieldID = _parseDicomFieldPath($fieldPath);
 
 	my $dicomFields = $self->{DicomField};
 
@@ -403,7 +402,7 @@ sub getValue
 				else
 				{
 					my $isLittleEndian = $self->isLittleEndian();
-					my ($vr, $value) = CommonUtil::_getDicomValue($dicomFields, $isLittleEndian);
+					my ($vr, $value) = _getDicomValue($dicomFields, $isLittleEndian);
 
 					if(scalar @$value == 1)
 					{
@@ -445,7 +444,7 @@ sub showDicomField
 	{
 		$dicomFields = $self->{DicomField};
 	}
-	CommonUtil::_showDicomField($dicomFields, 0, $verbose, $self->isLittleEndian());
+	_showDicomField($dicomFields, 0, $verbose, $self->isLittleEndian());
 }
 
 1;
@@ -462,7 +461,7 @@ DicomReader - A module to read Dicom Files
     my $dicomFile = "your dicom file";
 
     # get a DicomReader object
-    my $reader = DicomReader->new($dicomFile);
+    my $reader = DicomPack::IO::DicomReader->new($dicomFile);
 
     # show the content of the Dicom file to std.
     $reader->showDicomField(2);

@@ -6,7 +6,7 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 ##############################################################################
 
-package DicomAnonymizer;
+package DicomPack::Util::DicomAnonymizer;
 
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ use warnings;
 use DicomPack::IO::DicomReader;
 use DicomPack::IO::DicomWriter;
 
-our $VERSION = '0.90';
+our $VERSION = '0.92';
 
 sub new
 {
@@ -34,10 +34,10 @@ sub anonymize
 
 	my $anonymizedFieldList = shift;
 
-	my $reader = DicomReader->new($infile);
+	my $reader = DicomPack::IO::DicomReader->new($infile);
 	my $dicomFields = $reader->getDicomField();
 
-	my $writer = DicomWriter->new($dicomFields);
+	my $writer = DicomPack::IO::DicomWriter->new($dicomFields);
 	while(my ($tagPath, $tagValue) = each(%$anonymizedFieldList))
 	{
 		if(my $value = $reader->getValue($tagPath))
@@ -66,7 +66,7 @@ DicomAnonymizer - A module to anonymize Dicom files
     use DicomPack::Util::DicomAnonymizer;
 
     # get a DicomAnonymizer object
-    my $anonymizer  = DicomAnonymizer->new();
+    my $anonymizer  = DicomPack::Util::DicomAnonymizer->new();
 
     # input and output Dicom files
     my $inDicomFile = "your dicom file";
