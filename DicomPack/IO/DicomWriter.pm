@@ -734,7 +734,7 @@ __END__
 
 =head1 NAME
 
-DICOMReader - A module to create a dicom file from dicom fields
+DicomWriter - A module to create a dicom file from dicom fields
 
 =head1 SYNOPSIS
 

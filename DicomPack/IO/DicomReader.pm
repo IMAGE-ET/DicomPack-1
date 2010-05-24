@@ -454,7 +454,7 @@ __END__
 
 =head1 NAME
 
-DICOMReader - A module to read Dicom Files
+DicomReader - A module to read Dicom Files
 
 =head1 SYNOPSIS
 
