@@ -14,15 +14,16 @@ use warnings;
 use DicomPack::DB::DicomVRDict qw/getVR/;
 use DicomPack::IO::CommonUtil qw/_getDicomValue _isLittleEndian _showDicomField _parseDicomFieldPath/;
 
-our $VERSION = '0.92';
+our $VERSION = '0.93';
 
 #instantiate DicomReader
 sub new
 {
 	my $classname = shift;
 	my $infile = shift;
+	my $options = shift;
 
-	my $self = {};
+	my $self = {Options=>$options};
 
 	if(_parseDicomFile($self, $infile))
 	{
@@ -59,8 +60,10 @@ sub _parseDicomFile
 		$startPos = 128 + 4;
 	}
 
+	my $isImplicitVR = $self->{Options}->{ImplicitVR};
+
 	my $byteCount;
-	($byteCount, $self->{DicomField}) = _processDicomStr(\$dicomFileContent, $startPos, $filesize-$startPos, 1, 0, 0);
+	($byteCount, $self->{DicomField}) = _processDicomStr(\$dicomFileContent, $startPos, $filesize-$startPos, 1, $isImplicitVR, 0);
 
 	unless(defined $self->{DicomField}) # invalid dicom file
 	{
@@ -98,7 +101,7 @@ sub isImplicitVR
 {
 	my $self = shift;
 	my $dicomFields = $self->{DicomField};
-	my $isImplicitVR = 0;
+	my $isImplicitVR = undef;
 	if(defined $dicomFields)
 	{
 		if(defined $dicomFields->{"0002,0010"})
@@ -106,6 +109,10 @@ sub isImplicitVR
 			my ($tt_t, $vv_t) = _getDicomValue($dicomFields->{"0002,0010"});
 			my $transferSyntax = $vv_t->[0];
 			if($transferSyntax eq "1.2.840.10008.1.2")
+			{
+				$isImplicitVR = 1;
+			}
+			else
 			{
 				$isImplicitVR = 0;
 			}
@@ -120,7 +127,6 @@ sub _processDicomTag
 	my $dicomTagStr = shift;
 	my $isLittleEndian = shift;
 	my $isImplicitVR = shift;
-
 	my ($group, $element, $len, $vr, $tagLen);
 
 	my $isMetaInfo;
@@ -151,6 +157,17 @@ sub _processDicomTag
 
 	my $tagID = sprintf "%04x,%04x", $group, $element;
 
+	unless(defined $isImplicitVR)
+	{
+		if($vr =~ m/^(AE|AS|AT|CS|DA|DS|DT|FL|FD|IS|LO|LT|PN|SH|SL|SS|ST|TM|UI|UL|US|OB|OW|OF|SQ|UT|UN)$/)
+		{
+			$isImplicitVR = 0;
+		}
+		else
+		{
+			$isImplicitVR = 1;
+		}
+	}
 
 	if($isImplicitVR and !$isMetaInfo)  # implicit VR
 	{
@@ -223,7 +240,6 @@ sub _processDicomStr
 	my $isImplicitVR = shift;
 	my $depth = shift;
 	my $vrParent = shift;
-
 	my $byteCount = 0;
 	my $dicomFields;
 
@@ -338,6 +354,10 @@ sub _processDicomStr
 				{
 					$isImplicitVR = 1;
 				}
+				else
+				{
+					$isImplicitVR = 0;
+				}
 			}
 		}
 
@@ -361,6 +381,8 @@ sub getValue
 	my $self = shift;
 	my $fieldPath = shift;
 	my $mode = shift;
+	
+	$mode = "" unless defined $mode;
 
 	my @fieldID = _parseDicomFieldPath($fieldPath);
 
