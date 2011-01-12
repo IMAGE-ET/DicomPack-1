@@ -13,7 +13,7 @@ use warnings;
 
 use DicomPack::IO::DicomReader;
 
-our $VERSION = '0.92';
+our $VERSION = '0.95';
 
 sub new
 {

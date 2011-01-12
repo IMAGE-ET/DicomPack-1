@@ -17,7 +17,7 @@ use Exporter;
 @ISA = qw/Exporter/;
 @EXPORT_OK = qw/getTag getTagID getTagDesc/;
 
-our $VERSION = '0.92';
+our $VERSION = '0.95';
 
 my $DicomTagList = {
    "0002,0000" => {

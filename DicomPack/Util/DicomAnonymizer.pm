@@ -14,7 +14,7 @@ use warnings;
 use DicomPack::IO::DicomReader;
 use DicomPack::IO::DicomWriter;
 
-our $VERSION = '0.92';
+our $VERSION = '0.95';
 
 sub new
 {
@@ -40,9 +40,8 @@ sub anonymize
 	my $writer = DicomPack::IO::DicomWriter->new($dicomFields);
 	while(my ($tagPath, $tagValue) = each(%$anonymizedFieldList))
 	{
-		if(my $value = $reader->getValue($tagPath))
+		if(my ($value,$vr) = $reader->getValue($tagPath))
 		{
-			my $vr = substr($value, 0, 2);
 			$writer->setValue($tagPath, $tagValue, $vr);
 		}
 		else
@@ -89,13 +88,19 @@ This module anonymize (or change) the values of specified Dicom fields.
 
 Returns a new DicomAnonymizer object.
 
+=back
+
+=item C<anonymize>
+
+Anonymize the specified dicom fields with new values.
+
 =over 4
 
 =item Input parameter(s):
 
 =over 4
 
-=item 1. 
+=item 1.
 
 A path to a to-be-anonymized dicom file
 
@@ -109,12 +114,6 @@ A hash reference (format: DicomFieldName=>"NewValue", DicomFieldName is the
 Dicom tag path pointing to the dicom field whose value will be set to NewValue).
 
 =back
-
-=back
-
-=item C<anonymize>
-
-Anonymize the specified dicom fields with new values.
 
 =back
 
